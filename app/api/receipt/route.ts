@@ -1,20 +1,14 @@
-import { runOCR } from "@/lib/ocr"
-import { analyzeReceipt } from "@/lib/gemini"
+import { analyzeReceiptImage } from "@/lib/geminivision"
 import { appendRow } from "@/lib/sheets"
 
 export async function POST(req:Request){
 
 const body = await req.json()
 
-const image = body.image
+const base64 = body.image.split(",")[1]
 
-// OCR
-const text = await runOCR(image)
+const data = await analyzeReceiptImage(base64)
 
-// AI解析
-const data = await analyzeReceipt(text)
-
-// Sheets書き込み
 await appendRow(data)
 
 return Response.json({
