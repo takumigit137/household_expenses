@@ -1,62 +1,60 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Tesseract from "tesseract.js";
+import { useState } from "react"
 
-export default function Home() {
-  const [image, setImage] = useState<File | null>(null);
-  const [text, setText] = useState("");
-  const [loading, setLoading] = useState(false);
+export default function Page(){
 
-  const handleImage = async (e: any) => {
-    const file = e.target.files[0];
-    setImage(file);
+const [image,setImage] = useState<string>()
 
-    setLoading(true);
+async function upload(){
 
-    const result = await Tesseract.recognize(file, "jpn");
-    setText(result.data.text);
+await fetch("/api/receipt",{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+image
+})
+})
 
-    setLoading(false);
-  };
+alert("保存しました")
 
-  const sendToSheets = async () => {
-    // 超簡易抽出（後で改善可能）
-    const totalMatch = text.match(/¥?\d+/);
-    const dateMatch = text.match(/\d{4}\/\d{2}\/\d{2}/);
+}
 
-    await fetch("/api/sheets", {
-      method: "POST",
-      body: JSON.stringify({
-        store: "不明",
-        date: dateMatch?.[0] ?? "",
-        total: totalMatch?.[0] ?? "",
-      }),
-    });
+return(
 
-    alert("送信完了");
-  };
+<div>
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>レシートスキャナー</h1>
+<h1>レシート記録</h1>
 
-      <input
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleImage}
-      />
+<input
+type="file"
+accept="image/*"
+capture="environment"
+onChange={(e)=>{
 
-      {loading && <p>OCR中...</p>}
+const file = e.target.files?.[0]
 
-      <pre>{text}</pre>
+if(!file) return
 
-      {text && (
-        <button onClick={sendToSheets}>
-          スプレッドシートへ送信
-        </button>
-      )}
-    </div>
-  );
+const reader = new FileReader()
+
+reader.onload=()=>{
+setImage(reader.result as string)
+}
+
+reader.readAsDataURL(file)
+
+}}
+/>
+
+<button onClick={upload}>
+送信
+</button>
+
+</div>
+
+)
+
 }
